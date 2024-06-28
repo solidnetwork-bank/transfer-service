@@ -1,0 +1,55 @@
+name: sonarcloud
+on:
+  push:
+  workflow_dispatch:
+    
+jobs:
+  sonarcloud:
+    name: sonarcloud
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout code from selected branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Print repository name
+        run: |
+          echo ${{ github.event.repository.name }}
+
+      # Setup Java AMZ to cache Sonar scanner
+      - name: Set up JDK 
+        uses: actions/setup-java@v4
+        with:
+          distribution: "corretto"
+          java-version: "21"
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      # please disable Automatic Analysis: Administration > Automatic Analysis
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar 
+            -Dsonar.organization=solidnetwork-bank 
+            -Dsonar.projectKey=solidnetwork-bank_${{ github.event.repository.name }} 
+            -Dsonar.coverage.jacoco.xmlReportPaths=./target/site/jacoco/jacoco.xml
+            -Dsonar.sources=src/main/java 
+            -Dsonar.exclusions=**/test/**
+            -Dsonar.language=java 
+            -Dsonar.tests=src/test/java
+            -Dsonar.host.url=https://sonarcloud.io

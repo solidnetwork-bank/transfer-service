@@ -1,0 +1,16 @@
+{
+	"name": "Universal",
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"VisualStudioExptTeam.vscodeintellicode",
+				"redhat.vscode-yaml",
+				"ms-azuretools.vscode-docker",
+				"vscjava.vscode-java-pack",
+				"redhat.vscode-xml"
+			]
+		}
+	},
+	"postCreateCommand": "sdk install java 21.0.2-amzn"
+}
